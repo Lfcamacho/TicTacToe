@@ -33,8 +33,8 @@ class Game():
 
         for i in range(1,3):
             coord = round(WIDTH * i / 3)
-            pygame.draw.line(WIN, (0,0,0),(coord,0), (coord,HEIGHT), 3)
-            pygame.draw.line(WIN, (0,0,0),(0,coord), (WIDTH,coord), 3)  
+            pygame.draw.line(WIN, (0,0,0),(coord,0), (coord,HEIGHT), 5)
+            pygame.draw.line(WIN, (0,0,0),(0,coord), (WIDTH,coord), 5)  
 
 
     def player(self, pos):
@@ -45,11 +45,15 @@ class Game():
 
             self.board[row][col] = self.turn
             self.draw(row,col)
+            self.game_state()
 
-            if tic.has_won(self.board) or tic.is_full(self.board):
-                self.finish()
-            else:
-                self.change_turn()
+    
+    def game_state(self):
+
+        if tic.has_won(self.board) or tic.is_full(self.board):
+            self.finish()
+        else:
+            self.change_turn()
 
 
     def draw(self, row, col):
@@ -64,12 +68,12 @@ class Game():
         self.end = True
 
         if tic.has_won(self.board):
-            finish_text = f"{self.turn}'s have won"
+            finish_text = f"{self.turn}'s won"
         else:
             finish_text = "It's a tie"
 
         white = pygame.Surface((WIDTH,HEIGHT))
-        white.set_alpha(230)
+        white.set_alpha(220)
         WIN.blit(white, (0,0))
 
         finish_label = MAIN_FONT.render(finish_text, 1, (255,255,255))
@@ -83,6 +87,7 @@ class Game():
         y = 230
         WIN.blit(replay_label, (x,y))
 
+        
 
     def get_guiposition(self, row, col, label):
 
@@ -98,7 +103,6 @@ class Game():
         gap = WIDTH / 3
         col = int(pos[0] // gap)
         row = int(pos[1] // gap)
-
         return row, col 
 
 
@@ -110,6 +114,13 @@ class Game():
         else:
             self.turn = self.players[0]
             self.colorturn = self.color[0]
+
+    def computer_move(self):
+
+        row,col = tic.computer(self.board)
+        self.board[row][col] = self.turn
+        self.draw(row,col)
+        self.game_state()
             
 
 
@@ -126,14 +137,18 @@ def main():
         clock.tick(FPS)
         pygame.display.update()
 
-        for event in pygame.event.get():
+        if tictactoe.end:
+            run = False
+        else:
+            for event in pygame.event.get():
 
-            if event.type == pygame.QUIT:
-                quit()
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                tictactoe.player(event.pos)
-            if tictactoe.end and event.type == pygame.MOUSEBUTTONDOWN:
-                run = False
+                if event.type == pygame.QUIT:
+                    quit()
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    tictactoe.player(event.pos)
+
+            if tictactoe.turn == 'x':
+                tictactoe.computer_move()
 
 def menu():
 
