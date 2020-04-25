@@ -1,17 +1,20 @@
 import pygame
 import time
 import random
+import textwrap
 import functions_tictactoe as tic
 pygame.font.init()
 
-WIDTH, HEIGHT = 300, 300
+WIDTH, HEIGHT = 400, 400
 WIN = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Tic Tac Toe")
 
 WIN.fill((255,255,255))
 
-PLAYER_FONT = pygame.font.SysFont("comicsans", 150)
-MAIN_FONT = pygame.font.SysFont("comicsans", 50)
+PLAYER_FONT = pygame.font.SysFont("comicsans", 200)
+MAIN_FONT = pygame.font.SysFont("comicsans", 70)
+DESCRIPTION_FONT = pygame.font.SysFont("comicsans", 25)
+START_FONT = pygame.font.SysFont("comicsans", 30)
 
 
 class Game():
@@ -28,28 +31,33 @@ class Game():
         self.colorturn = self.color[randnum]
         self.end = False
 
-
         for i in range(1,3):
-
             coord = round(WIDTH * i / 3)
             pygame.draw.line(WIN, (0,0,0),(coord,0), (coord,HEIGHT), 3)
             pygame.draw.line(WIN, (0,0,0),(0,coord), (WIDTH,coord), 3)  
 
-    def draw(self, pos):
 
-        label = PLAYER_FONT.render(self.turn, 1, self.colorturn)
-        position = self.get_position(pos, label)
+    def player(self, pos):
 
-        if tic.validate(self.board, self.row, self.col):
+        row,col = self.get_boardposition(pos)
 
-            WIN.blit(label, (position[0], position[1]))
-            self.board[self.row][self.col] = self.turn
+        if tic.valid(self.board, row, col):
+
+            self.board[row][col] = self.turn
+            self.draw(row,col)
 
             if tic.has_won(self.board) or tic.is_full(self.board):
                 self.finish()
-
             else:
                 self.change_turn()
+
+
+    def draw(self, row, col):
+
+        label = PLAYER_FONT.render(self.turn, 1, self.colorturn)
+        x,y = self.get_guiposition(row, col, label)
+        WIN.blit(label, (x, y))
+
 
     def finish(self):
 
@@ -61,7 +69,7 @@ class Game():
             finish_text = "It's a tie"
 
         white = pygame.Surface((WIDTH,HEIGHT))
-        white.set_alpha(220)
+        white.set_alpha(230)
         WIN.blit(white, (0,0))
 
         finish_label = MAIN_FONT.render(finish_text, 1, (255,255,255))
@@ -69,37 +77,30 @@ class Game():
         y = round(HEIGHT / 2 - finish_label.get_height() / 2)
         WIN.blit(finish_label, (x,y))
 
+        replay = "(Press the mouse to play again)"
+        replay_label = DESCRIPTION_FONT.render(replay, 1, (255,255,255))
+        x = round(WIDTH / 2 - replay_label.get_width() / 2)
+        y = 230
+        WIN.blit(replay_label, (x,y))
 
-    def get_position(self, pos, label):
 
-        w = label.get_width() / 2
-        h = label.get_height() / 2
+    def get_guiposition(self, row, col, label):
 
-        if pos[0] < WIDTH / 3:
-            xpos = WIDTH / 6 - w
-            self.col = 0
+        gap = WIDTH / 3
+        x = col * gap + (gap - label.get_width()) / 2
+        y = row * gap + (gap - label.get_height()) / 2
 
-        elif pos[0] > WIDTH * 2 / 3:
-            xpos = WIDTH *5 / 6 - w
-            self.col = 2
+        return round(x), round(y) 
 
-        else:
-            xpos = HEIGHT / 2 - w
-            self.col = 1
 
-        if pos[1] < HEIGHT / 3:
-            ypos = HEIGHT / 6 - h
-            self.row = 0
+    def get_boardposition(self, pos):
 
-        elif pos[1] > HEIGHT * 2 / 3:
-            ypos = HEIGHT *5 / 6 - h
-            self.row = 2
+        gap = WIDTH / 3
+        col = int(pos[0] // gap)
+        row = int(pos[1] // gap)
 
-        else:
-            ypos = HEIGHT / 2 - h
-            self.row = 1
+        return row, col 
 
-        return [round(xpos), round(ypos)]
 
     def change_turn(self):
 
@@ -130,24 +131,38 @@ def main():
             if event.type == pygame.QUIT:
                 quit()
             if event.type == pygame.MOUSEBUTTONDOWN:
-                tictactoe.draw(event.pos)
+                tictactoe.player(event.pos)
             if tictactoe.end and event.type == pygame.MOUSEBUTTONDOWN:
                 run = False
 
 def menu():
 
     run = True
-    FPS = 60
-    clock = pygame.time.Clock()
 
     title = "TIC TAC TOE"
     title_label = MAIN_FONT.render(title, 1, (0,0,0))
     x = round(WIDTH / 2 - title_label.get_width() / 2)
-    y = 30
+    y = 40
     WIN.blit(title_label, (x,y))
 
+    description = textwrap.wrap("Try to beat the computer in classic Tic Tac Toe. The game will randomly choose who starts playing. You are the o's, good luck!", 40)
+    y = 100
+
+    for word in description:
+
+        description_label = DESCRIPTION_FONT.render(word, 1, (0,0,0))
+        x = 30
+        y = y + description_label.get_height()
+        WIN.blit(description_label, (x,y))
+
+    start = "Press the mouse to start..."
+    start_label = START_FONT.render(start, 1, (0,0,0))
+    x = round(WIDTH / 2 - start_label.get_width() / 2)
+    y = 250
+    WIN.blit(start_label, (x,y))
+
+
     while run:
-        clock.tick(FPS)
         pygame.display.update()
 
         for event in pygame.event.get():

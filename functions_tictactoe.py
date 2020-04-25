@@ -5,7 +5,7 @@ def is_full(board):
 			return False
 	return True
 
-def validate(board, row, col):
+def valid(board, row, col):
 
 	return True if board[row][col] == '' else False
 
