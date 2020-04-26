@@ -2,15 +2,18 @@ import pygame
 import time
 import random
 import textwrap
+import copy
 import functions_tictactoe as tic
 pygame.font.init()
 
+
+# Initializing all variables that are not changing in the game, like size, color and caption
 WIDTH, HEIGHT = 400, 400
 WIN = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Tic Tac Toe")
-
 WIN.fill((255,255,255))
 
+# Fonts used for text display
 PLAYER_FONT = pygame.font.SysFont("comicsans", 200)
 MAIN_FONT = pygame.font.SysFont("comicsans", 70)
 DESCRIPTION_FONT = pygame.font.SysFont("comicsans", 25)
@@ -21,22 +24,22 @@ class Game():
 
     def __init__(self):
 
+
         self.board = [['', '', ''],['', '', ''],['', '', '']]
-
-
-        randnum = random.randint(0,1)
         self.players = ('x', 'o')
-        self.turn = self.players[randnum]
+        randnum = random.randint(0,1)           #random number to decide who starts playing
+        self.turn = self.players[randnum]   
         self.color = ((0,0,255),(255,0,0))
         self.colorturn = self.color[randnum]
         self.end = False
 
+        # Draw lines un board
         for i in range(1,3):
             coord = round(WIDTH * i / 3)
             pygame.draw.line(WIN, (0,0,0),(coord,0), (coord,HEIGHT), 5)
             pygame.draw.line(WIN, (0,0,0),(0,coord), (WIDTH,coord), 5)  
 
-
+    # Human player method, organizes steps to follow when the screen is clicked 
     def player(self, pos):
 
         row,col = self.get_boardposition(pos)
@@ -47,27 +50,29 @@ class Game():
             self.draw(row,col)
             self.game_state()
 
-    
+    # Tells what to do if win, tie or continue    
     def game_state(self):
 
-        if tic.has_won(self.board) or tic.is_full(self.board):
-            self.finish()
+        state = tic.has_won(self.board)
+
+        if state:
+            self.finish(state)
         else:
             self.change_turn()
 
-
+    # Draws x's and o's
     def draw(self, row, col):
 
         label = PLAYER_FONT.render(self.turn, 1, self.colorturn)
         x,y = self.get_guiposition(row, col, label)
         WIN.blit(label, (x, y))
 
+    # Shows the end screen when game finishes
+    def finish(self, state):
 
-    def finish(self):
+        self.end = True     # Stops game
 
-        self.end = True
-
-        if tic.has_won(self.board):
+        if state == "win":
             finish_text = f"{self.turn}'s won"
         else:
             finish_text = "It's a tie"
@@ -88,7 +93,7 @@ class Game():
         WIN.blit(replay_label, (x,y))
 
         
-
+    # Gets the pixel position in the GUI 
     def get_guiposition(self, row, col, label):
 
         gap = WIDTH / 3
@@ -97,7 +102,7 @@ class Game():
 
         return round(x), round(y) 
 
-
+    # Gets position in matrix board[][]
     def get_boardposition(self, pos):
 
         gap = WIDTH / 3
@@ -105,7 +110,7 @@ class Game():
         row = int(pos[1] // gap)
         return row, col 
 
-
+    # Changes color and player for next turn
     def change_turn(self):
 
         if self.turn == 'x':
@@ -115,15 +120,17 @@ class Game():
             self.turn = self.players[0]
             self.colorturn = self.color[0]
 
+    # Computer player method, organizes steps to follow by computer
     def computer_move(self):
 
-        row,col = tic.computer(self.board)
+        board = copy.deepcopy(self.board)
+        row,col = tic.computer(board)
         self.board[row][col] = self.turn
         self.draw(row,col)
         self.game_state()
             
 
-
+# Main window, creates Game object and reads human inputs
 def main():
 
     WIN.fill((255,255,255))
@@ -135,7 +142,7 @@ def main():
 
     while run:
         clock.tick(FPS)
-        pygame.display.update()
+        pygame.display.update()     # update window
 
         if tictactoe.end:
             run = False
@@ -144,16 +151,17 @@ def main():
 
                 if event.type == pygame.QUIT:
                     quit()
-                if event.type == pygame.MOUSEBUTTONDOWN:
+                if event.type == pygame.MOUSEBUTTONDOWN:    # Human move when mouse clicked
                     tictactoe.player(event.pos)
 
+            # Computer moves onces human finishes
             if tictactoe.turn == 'x':
                 tictactoe.computer_move()
 
+# Shows the main menu screen (first to appear)
 def menu():
 
     run = True
-
     title = "TIC TAC TOE"
     title_label = MAIN_FONT.render(title, 1, (0,0,0))
     x = round(WIDTH / 2 - title_label.get_width() / 2)
@@ -163,6 +171,7 @@ def menu():
     description = textwrap.wrap("Try to beat the computer in classic Tic Tac Toe. The game will randomly choose who starts playing. You are the o's, good luck!", 40)
     y = 100
 
+    # Loop for displaying description text
     for word in description:
 
         description_label = DESCRIPTION_FONT.render(word, 1, (0,0,0))
